@@ -1,29 +1,51 @@
 
 require "json"
 class Hangman
-	def initialize
-		@wordCompletion = Array.new
-		@lettersGuessed = Array.new
-		lines = File.readlines "5desk.txt"
-		@randomIndex =  rand(61406)
-		lines.each_with_index do |line,index|
-			if (index == @randomIndex)
-				checkSize = true
-				while (checkSize)
-					if (lines[index].chomp.downcase.size >= 5 && lines[index].chomp.downcase.size <= 12)
-						@word = lines[index].chomp.downcase
-						puts @word
-						checkSize = false;
+	def initialize(loadOrSave = false, wordCompletion = nil, lettersGuessed = nil, word = nil)
+		if (loadOrSave == true) #load
+			@wordCompletion = wordCompletion
+			@lettersGuessed = lettersGuessed
+			@word = word
+			puts "Game Loaded!"
+		else
+			@wordCompletion = Array.new
+			@lettersGuessed = Array.new
+			lines = File.readlines "5desk.txt"
+			randomIndex =  rand(61406)
+			lines.each_with_index do |line,index|
+				if (index == randomIndex)
+					checkSize = true
+					while (checkSize)
+						if (lines[index].chomp.downcase.size >= 5 && lines[index].chomp.downcase.size <= 12)
+							@word = lines[index].chomp.downcase
+							puts @word
+							checkSize = false;
+						end
+						puts index
+						index += 1;
 					end
-					puts index
-					index += 1;
 				end
 			end
-		end
-		for i in 0...@word.size
-			@wordCompletion.push('_')
+			for i in 0...@word.size
+				@wordCompletion.push('_')
+			end
 		end
 	end
+
+	
+	def to_json
+	    JSON.dump ({
+	      :loadOrSave => true,
+	      :wordCompletion => @wordCompletion,
+	      :lettersGuessed => @lettersGuessed,
+	      :word => @word
+	    })
+  	end
+
+  	def self.from_json(string)
+    	data = JSON.load string
+    	self.new(data['loadOrSave'], data['wordCompletion'], data['lettersGuessed'], data['word'])
+  	end
 
 	def play
 		playing = true
@@ -76,20 +98,13 @@ class Hangman
 		end
 	end
 
-	def save
-		@json = self.to_json
-		puts @json
-	end
-
-	def load
-		@json.from_json
-	end
-
 end
 
-game = Hangman.new
+
+
+game = Hangman.new(false)
 game.guess
-game.save
+json1 = game.to_json
 game.guess
-game.load
-game.guess
+game2 = Hangman.from_json(json1)
+game2.guess
